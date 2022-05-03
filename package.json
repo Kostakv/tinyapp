@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Kostakv/tinyapp/issues"
   },
-  "homepage": "https://github.com/Kostakv/tinyapp#readme"
+  "homepage": "https://github.com/Kostakv/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
