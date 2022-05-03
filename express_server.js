@@ -5,6 +5,17 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+function generateRandomString() {
+  var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < 7; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * 
+      charactersLength));
+   }
+   return result;
+}
+
 
 app.set("view engine", "ejs");
 
@@ -13,8 +24,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+  console.log(generateRandomString())
 });
 
 
@@ -48,25 +61,28 @@ app.get("/set", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.post("/urls", (req, res) => {
+  console.log(req.body); 
+  const longURL = req.body.longURL;
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  res.redirect("/urls");         
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body);  
-  res.send("Ok");         
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]
+  res.redirect(longURL);
 });
 
-function generateRandomString() {
-  var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < 7; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * 
-      charactersLength));
-   }
-   return result;
-}
+
+
+
+
+
 
 
