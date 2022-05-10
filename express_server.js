@@ -4,6 +4,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 const bodyParser = require("body-parser");
+const res = require("express/lib/response");
 app.use(cookieParser())
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -34,6 +35,11 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+  "master": {
+    id: "host", 
+    email: "Kostakv@outlook.com", 
+    password: "password"
   }
 }
 
@@ -50,9 +56,18 @@ function checkEmail(email){
       return true;
     }
   }
-  return false;
-  
+  return false; 
 }
+
+function checkPassword(password, email){
+  for (const user in users){
+    if (users[user].password == password){
+      return true;
+    }
+  }
+  return false; 
+}
+
 
 
 app.get("/urls/new", (req, res) => {
@@ -140,7 +155,22 @@ app.post("/urls/:shortURL/newURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.redirect("/login")
+  
+  const email = req.body.email;
+  const password = req.body.password;
+  if (checkEmail(email) && checkPassword(password, email)){
+    for (const user in users){
+      if (users[user].email == email){
+        res.cookie("userID", user);
+      }
+    }
+    res.redirect("/urls")
+  } else {
+    res.status(400).send('Incorrect email or password')
+  }
+  
+  
+
   
 });
 
