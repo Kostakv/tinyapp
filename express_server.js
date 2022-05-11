@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
+const bcrypt = require('bcryptjs');
 
 const bodyParser = require("body-parser");
 const res = require("express/lib/response");
@@ -26,21 +27,7 @@ app.set("view engine", "ejs");
 
 
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  },
-  "master": {
-    id: "host", 
-    email: "Kostakv@outlook.com", 
-    password: "password"
-  }
+
    
 }
 
@@ -86,9 +73,9 @@ function checkEmail(email){
   return false; 
 }
 
-function checkPassword(password){
+function checkPassword(password,email){
   for (const user in users){
-    if (users[user].password == password){
+    if (bcrypt.compareSync(password,users[user].password) && users[user].email === email){
       return true;
     }
   }
@@ -254,7 +241,8 @@ app.post("/register", (req, res) => {
     res.status(400).send('Status: Bad Request')
   }
   else {
-  users[ranID] = {id: ranID, email: req.body.email, password: req.body.password}
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+  users[ranID] = {id: ranID, email: req.body.email, password: hashedPassword}
   res.cookie('userID', ranID)
   res.cookie('email', req.body.email);
   res.cookie('password', req.body.password);
