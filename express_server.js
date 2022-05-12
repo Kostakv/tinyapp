@@ -142,7 +142,6 @@ app.post("/urls", (req, res) => {
   if (req.session.user_id === undefined){
     res.status(400).send('Error, access denied!')
   } else {
-  console.log(req.body); 
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {longURL: longURL, userID: req.session.user_id};
@@ -158,8 +157,9 @@ app.get("/urls/:shortURL", (req, res) => {
     }else {
       access = false;
     }
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, users: users, userID: req.session.user_id, urls: urlDatabase, access: access };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, users: users, userID: req.session.user_id, urls: urlDatabase, access: access };
   res.render("urls_show", templateVars);
+  
     
   } else {
     res.status(400).send("Short URL does not exist!")
@@ -193,9 +193,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // Edit URL post request, checks if url is in database along with who owns the URL, can't edit if no permission. 
 app.post("/urls/:shortURL/edit", (req, res) => {
+  let access = false;
+  let newURL = req.body.newURL;
   if (urlsForUser(req.session.user_id,req.params.shortURL)){
-  urlDatabase[req.params.shortURL] = {longURL: req.body.newURL, userID: req.session.user_id}
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, users: users, userID: req.session.user_id};
+    access = true;
+  urlDatabase[req.params.shortURL] = {longURL: newURL, userID: req.session.user_id}
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, users: users, userID: req.session.user_id, access: access};
   res.render("urls_show",templateVars)
   } else {
     res.status(400).send("You do not have permission to edit this URL")
