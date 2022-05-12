@@ -1,26 +1,23 @@
-# Tiny APP 
+# TinyApp Project
 
-## Description
+TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
 
-This website is designed to store a database of URLS and their short URLS. for example https://www.lighthouselabs.ca → http://goo.gl/6alQXu.  It keeps track of all your URLs, where you can add, update and delete existing URLS.
+## Final Product
+
+!["screenshot description"](https://github.com/Kostakv/tinyapp/blob/feature/user-registration/docs/urls-page-links.png?raw=true)
+!["screenshot description"](https://github.com/Kostakv/tinyapp/blob/feature/user-registration/docs/urls-page.png?raw=true)
+
+## Dependencies
+
+- Node.js
+- Express
+- EJS
+- bcrypt
+- body-parser
+- cookie-session
 
 
+## Getting Started
 
-
-### Features
-
-*  Web Server: Node.js
-*  Middleware: Express
-*  Template Engine: EJS
-*  Nodemon
-
-### Installation
-
-```
-git clone https://github.com/Kostakv/tinyapp tinyapp
-node express_server.js
-
-*** On browser *** localhost:8080/urls
-
-```
-
+- Install all dependencies (using the `npm install` command).
+- Run the development web server using the `node express_server.js` command.

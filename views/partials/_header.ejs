@@ -8,7 +8,6 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-
         <% valid = false; %>
         <% for (const user in users) { %>
             <%if (user == userID){ %>
@@ -27,6 +26,9 @@
             <form action="/register" method="GET">
               <button type="submit">Register</button>
               </form>
+              
+              <h1>Please login or register to view URLS!</h1>
+              
           <% } %>
 
 
