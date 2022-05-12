@@ -1,19 +1,18 @@
 const express = require("express");
-const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require('bcryptjs');
 var cookieSession = require('cookie-session')
+const helper = require('./helper')
 
 const bodyParser = require("body-parser");
-const res = require("express/lib/response");
-//app.use(cookieParser())
+
 
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(cookieSession({
   name: 'session',
-  keys: 'ABC/@432cuas42/as',
+  keys: ['ABC/@432cuas42/as'],
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
@@ -21,7 +20,7 @@ app.use(cookieSession({
 
 
 
-
+//Function to generate random string for new tinyURL's
 function generateRandomString() {
   var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -44,7 +43,7 @@ const users = {
    
 }
 
-
+//URL database, uses userID to validate which user has access to each longURL
 const urlDatabase = {
   b6UTxQ: {
         longURL: "https://www.tsn.ca",
@@ -56,6 +55,7 @@ const urlDatabase = {
     }
 };
 
+//Function to check if the URL is in the urlDatabase or not.
 function checkURL(url){
   for (const key in urlDatabase) {
     if (url === key){
@@ -65,7 +65,7 @@ function checkURL(url){
   return false;
 }
 
-
+//Function that checks if the URL belongs to a specific user.
 function urlsForUser(id, url){
   for (const key in urlDatabase) {
     if (id === urlDatabase[key].userID && url === key){
@@ -76,16 +76,7 @@ function urlsForUser(id, url){
 }
 
 
-function checkEmail(email){
-  
-  for (const user in users){
-    if (users[user].email == email){
-      return true;
-    }
-  }
-  return false; 
-}
-
+//Checks the password with the email passed. returns true or false
 function checkPassword(password,email){
   for (const user in users){
     if (bcrypt.compareSync(password,users[user].password) && users[user].email === email){
@@ -143,7 +134,7 @@ app.get("/set", (req, res) => {
  });
 
  app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, users: users, userID: req.session.user_id  };
+  const templateVars = { urls: urlDatabase, users: users, userID: req.session.user_id };
   res.render("urls_index", templateVars);
 });
 
@@ -155,8 +146,6 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {longURL: longURL, userID: req.session.user_id};
-  console.log(urlDatabase)
-  //urlDatabase[shortURL] = longURL;
   res.redirect("/urls"); 
   }        
 });
@@ -191,7 +180,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
   
 });
-
+// Delete post request, cannot delete if access is denied.
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (urlsForUser(req.session.user_id,req.params.shortURL)){
   delete urlDatabase[req.params.shortURL]
@@ -202,6 +191,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 });
 
+// Edit URL post request, checks if url is in database along with who owns the URL, can't edit if no permission. 
 app.post("/urls/:shortURL/edit", (req, res) => {
   if (urlsForUser(req.session.user_id,req.params.shortURL)){
   urlDatabase[req.params.shortURL] = {longURL: req.body.newURL, userID: req.session.user_id}
@@ -212,6 +202,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
+//post request for new URL, assigns url to the urlDatabase, assigns who registered the new URL
 app.post("/urls/:shortURL/newURL", (req, res) => {
 
     const longURL = req.body.newURL;
@@ -224,7 +215,7 @@ app.post("/login", (req, res) => {
   
   const email = req.body.email;
   const password = req.body.password;
-  if (checkEmail(email) && checkPassword(password, email)){
+  if (helper.checkEmail(email,users) && checkPassword(password, email)){ // Checks if email and password match, both must be TRUE
     for (const user in users){
       if (users[user].email == email){
         req.session.user_id = user;
@@ -239,40 +230,27 @@ app.post("/login", (req, res) => {
 
   
 });
-
+// Logout post request, clears user_id cookie.
 app.post("/logout", (req, res) => {
-  res.clearCookie('userID')
+  req.session.user_id = undefined;
   res.redirect("/urls")
   
 });
 
+//Post to register an account.
 app.post("/register", (req, res) => {
 
   const ranID = generateRandomString();
-
-  if (req.body.email == '' || req.body.password == '' || checkEmail(req.body.email)){
+  // Checks if email is in use, along with if bad password or bad email entered, if any fail, wont pass.
+  if (req.body.email == '' || req.body.password == '' || helper.checkEmail(req.body.email,users)){ 
     res.status(400).send('Status: Bad Request')
   }
   else {
-  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  users[ranID] = {id: ranID, email: req.body.email, password: hashedPassword}
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10); // Hashes the password.
+  users[ranID] = {id: ranID, email: req.body.email, password: hashedPassword} // Generates new user passed on passed result.
   req.session.user_id = ranID;
-  console.log(req.session.user_id);
-
-  req.session.email = req.body.email;
-  req.session.password = hashedPassword;
   res.redirect("/urls");
   }
   
+  
 });
-
-
-
-
-
-
-
-
-
-
-
