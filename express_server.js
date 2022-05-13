@@ -21,16 +21,6 @@ app.use(cookieSession({
 
 
 //Function to generate random string for new tinyURL's
-function generateRandomString() {
-  var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < 7; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * 
-      charactersLength));
-   }
-   return result;
-}
 
 
 
@@ -99,12 +89,15 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render ("register")
+  const templateVars = { urls: urlDatabase, users: users, userID: req.session.user_id };
+  res.render ("register",templateVars)
+  
 });
 
 
 app.get("/login", (req, res) => {
-  res.render ("login")
+  const templateVars = { urls: urlDatabase, users: users, userID: req.session.user_id };
+  res.render ("login",templateVars)
 });
 
 
@@ -143,8 +136,9 @@ app.post("/urls", (req, res) => {
     res.status(400).send('Error, access denied!')
   } else {
   const longURL = req.body.longURL;
-  const shortURL = generateRandomString();
+  const shortURL = helper.generateRandomString();
   urlDatabase[shortURL] = {longURL: longURL, userID: req.session.user_id};
+  console.log(urlDatabase)
   res.redirect("/urls"); 
   }        
 });
@@ -191,6 +185,16 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 });
 
+app.get("/urls/:shortURL/edit", (req, res) => {
+  if (urlsForUser(req.session.user_id,req.params.shortURL)){
+    access = true;
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], users: users, userID: req.session.user_id, access: access};
+  res.render("urls_show",templateVars)
+  } else {
+    res.status(400).send("You do not have permission to edit this URL")
+  }
+});
+
 // Edit URL post request, checks if url is in database along with who owns the URL, can't edit if no permission. 
 app.post("/urls/:shortURL/edit", (req, res) => {
   let access = false;
@@ -198,7 +202,8 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   if (urlsForUser(req.session.user_id,req.params.shortURL)){
     access = true;
   urlDatabase[req.params.shortURL] = {longURL: newURL, userID: req.session.user_id}
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, users: users, userID: req.session.user_id, access: access};
+  console.log(urlDatabase[req.params.shortURL],urlDatabase)
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], users: users, userID: req.session.user_id, access: access};
   res.render("urls_show",templateVars)
   } else {
     res.status(400).send("You do not have permission to edit this URL")
@@ -243,7 +248,7 @@ app.post("/logout", (req, res) => {
 //Post to register an account.
 app.post("/register", (req, res) => {
 
-  const ranID = generateRandomString();
+  const ranID = helper.generateRandomString();
   // Checks if email is in use, along with if bad password or bad email entered, if any fail, wont pass.
   if (req.body.email == '' || req.body.password == '' || helper.checkEmail(req.body.email,users)){ 
     res.status(400).send('Status: Bad Request')
